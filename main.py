@@ -1,7 +1,7 @@
-
 import cv2
 import numpy as np
-from fastapi import FastAPI, File, UploadFile,HTTPException
+from fastapi import FastAPI, File, HTTPException, UploadFile
+from inspector_stub import inspect as run_inspection
 
 app = FastAPI()
 
@@ -15,10 +15,10 @@ async def inspect_image(file: UploadFile = File(...)):
     image = cv2.imdecode(np.frombuffer(data, np.uint8), cv2.IMREAD_COLOR)
     if image is None:
         raise HTTPException(status_code=400, detail="Could not read that image.")
-    height, width = image.shape[:2]
+    result = run_inspection(image)
     return {
         "filename": file.filename,
-        "width": width,
-        "height": height,
+        "action": result["action"],
+        "detections": result["detections"],
+        "trace": result["trace"],
     }
-
