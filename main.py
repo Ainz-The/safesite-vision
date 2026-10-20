@@ -5,8 +5,16 @@ import cv2
 import numpy as np
 from fastapi import FastAPI, File, HTTPException, Response, UploadFile
 from inspector_stub import inspect as run_inspection
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/")
+def home():
+    return FileResponse("static/index.html")
 
 
 async def load_image(file: UploadFile):

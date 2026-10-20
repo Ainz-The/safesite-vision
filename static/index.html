@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SafeSite Vision</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-helmet" viewBox="0 0 48 48"><path d="M8 31c0-10 7-18 16-18s16 8 16 18"/><path d="M4 31h40v5H4z"/><path d="M24 13v11"/></symbol>
+  <symbol id="i-vest" viewBox="0 0 48 48"><path d="M15 7l9 7 9-7 7 9-4 4v21H12V20l-4-4z"/><path d="M12 28h24M12 35h24M24 14v27"/></symbol>
+  <symbol id="i-detect" viewBox="0 0 48 48"><circle cx="24" cy="24" r="9"/><circle cx="24" cy="24" r="2"/><path d="M24 5v9M24 34v9M5 24h9M34 24h9"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 48 48"><path d="M24 6L44 40H4z"/><path d="M24 20v10M24 35v1"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 48 48"><path d="M24 5l15 6v11c0 10-6 17-15 21C15 39 9 32 9 22V11z"/><path d="M17 24l5 5 9-10"/></symbol>
+</svg>
+
+<div class="bg-icons" aria-hidden="true">
+  <svg class="ico" style="--x:6%;--y:14%;--s:58px;--d:24s;--r:-10deg"><use href="#i-helmet"/></svg>
+  <svg class="ico" style="--x:22%;--y:62%;--s:64px;--d:28s;--r:8deg"><use href="#i-vest"/></svg>
+  <svg class="ico" style="--x:38%;--y:10%;--s:50px;--d:20s;--r:0deg"><use href="#i-detect"/></svg>
+  <svg class="ico" style="--x:55%;--y:78%;--s:52px;--d:26s;--r:-6deg"><use href="#i-warn"/></svg>
+  <svg class="ico" style="--x:70%;--y:18%;--s:56px;--d:30s;--r:12deg"><use href="#i-shield"/></svg>
+  <svg class="ico red" style="--x:84%;--y:52%;--s:62px;--d:22s;--r:14deg"><use href="#i-helmet"/></svg>
+  <svg class="ico" style="--x:92%;--y:12%;--s:52px;--d:27s;--r:-8deg"><use href="#i-vest"/></svg>
+  <svg class="ico" style="--x:12%;--y:86%;--s:60px;--d:25s;--r:6deg"><use href="#i-detect"/></svg>
+  <svg class="ico red" style="--x:30%;--y:36%;--s:46px;--d:21s;--r:10deg"><use href="#i-warn"/></svg>
+  <svg class="ico" style="--x:46%;--y:52%;--s:54px;--d:29s;--r:-12deg"><use href="#i-shield"/></svg>
+  <svg class="ico" style="--x:62%;--y:38%;--s:48px;--d:23s;--r:-4deg"><use href="#i-helmet"/></svg>
+  <svg class="ico red" style="--x:78%;--y:84%;--s:56px;--d:26s;--r:0deg"><use href="#i-detect"/></svg>
+  <svg class="ico" style="--x:3%;--y:48%;--s:50px;--d:24s;--r:5deg"><use href="#i-warn"/></svg>
+  <svg class="ico red" style="--x:50%;--y:92%;--s:46px;--d:28s;--r:-10deg"><use href="#i-vest"/></svg>
+  <svg class="ico" style="--x:90%;--y:76%;--s:48px;--d:22s;--r:9deg"><use href="#i-shield"/></svg>
+</div>
+  <div class="hazard-strip"></div>
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> SAFESITE <b>VISION</b></div>
+    <div class="sys" id="system-status">SYSTEM ONLINE</div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">AUTONOMOUS PPE INSPECTOR</p>
+      <h1>Is this site safe? <span>Let the agent decide.</span></h1>
+      <p class="sub">Upload a site photo. The agent checks image quality, looks for helmets and vests, and chooses what to do next.</p>
+    </section>
+
+    <section class="console">
+      <div class="panel upload-panel">
+        <label class="dropzone" id="dropzone">
+          <input type="file" id="file-input" accept="image/*" hidden>
+          <p class="dz-title">Drop a photo here</p>
+          <p class="dz-hint">or click to choose</p>
+        </label>
+        <button id="run-btn" class="btn" disabled>RUN INSPECTION</button>
+      </div>
+
+      <div class="panel viewer-panel">
+        <div class="frame" id="frame">
+          <img id="preview" alt="" hidden>
+                    <div class="boxes" id="boxes"></div>
+          <div class="scanline" id="scanline" hidden></div>
+          <p class="placeholder" id="placeholder">NO IMAGE LOADED</p>
+        </div>
+        <div class="badge idle" id="badge">AWAITING INPUT</div>
+      </div>
+              <p class="log" id="log"></p>
+
+      <div class="panel detections-panel">
+        <h2>Detections</h2>
+        <ul id="detections"><li class="empty">Nothing yet</li></ul>
+      </div>
+
+      <div class="panel trace-panel">
+        <h2>Agent trace</h2>
+        <ol id="trace"><li class="empty">Run an inspection to see the agent's steps</li></ol>
+      </div>
+
+      <div class="panel cloud-panel">
+        <h2>Cloud</h2>
+        <div class="chip" id="chip-s3">S3 saved</div>
+        <div class="chip" id="chip-sns">Alert sent</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
