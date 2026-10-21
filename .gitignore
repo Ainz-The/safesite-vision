@@ -218,3 +218,25 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# Model weights
+models/
+yolo11n.pt
+
+# Generated test images and debug outputs
+*_annotated.jpg
+*_debug.jpg
+combined_detection.jpg
+combined_multi_workers.jpg
+multi_worker_association.jpg
+person_detection_comparison.jpg
+ppe_visualization.jpg
+raw_worker_candidates.jpg
+worker_only_nms.jpg
+zoomed_test.png
+detector_test_result*.jpg
+agent_test_output.jpg
+agent_test_result.jpg
+
+# Local evaluation outputs
+evaluation_results/
+evaluation_notes.csv
