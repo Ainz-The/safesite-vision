@@ -276,3 +276,15 @@ ul, ol { list-style: none; }
 
 #trace li:not(.empty) { opacity: 0; transform: translateX(-10px); transition: .4s; }
 #trace li.show { opacity: 1; transform: none; }
+
+
+
+#detections { max-height: 420px; overflow-y: auto; padding-right: 4px; }
+#detections li.uncertain { border-left-color: var(--human); }
+#detections li.uncertain .flag { color: var(--human); }
+#detections li.uncertain .bar i { background: var(--human); }
+.box.ok span { display: none; }
+
+
+.box.ok { border-width: 1px; opacity: .45; box-shadow: none; }
+#detections { scrollbar-width: thin; scrollbar-color: #3a4252 transparent; }

@@ -98,13 +98,22 @@ function imageRect() {
   return { x: (fw - iw * scale) / 2, y: (fh - ih * scale) / 2, scale };
 }
 
+const MIN_CONF = 0.5;
+
+function kind(d) {
+  const bad = d.violation ?? d.potential_violation;
+  if (!bad) return "ok";
+  return d.conf >= MIN_CONF ? "violation" : "uncertain";
+}
+
 function renderBoxes(list) {
   const layer = $("boxes");
   layer.replaceChildren();
   const r = imageRect();
-  list.forEach((d, i) => {
+  list.filter((d) => d.conf >= MIN_CONF).forEach((d, i) => {
+    const k = kind(d);
     const [x1, y1, x2, y2] = d.box;
-    const b = el("div", "box" + (d.violation ? "" : " ok"));
+    const b = el("div", "box" + (k === "violation" ? "" : " ok"));
     b.style.left = r.x + x1 * r.scale + "px";
     b.style.top = r.y + y1 * r.scale + "px";
     b.style.width = (x2 - x1) * r.scale + "px";
@@ -122,29 +131,52 @@ function renderDetections(list) {
     ul.append(el("li", "empty", "No people detected"));
     return;
   }
-  list.forEach((d, i) => {
+  const order = { violation: 0, uncertain: 1, ok: 2 };
+  const sorted = [...list].sort((a, b) => order[kind(a)] - order[kind(b)] || b.conf - a.conf);
+  sorted.forEach((d, i) => {
+    const k = kind(d);
     const pct = Math.round(d.conf * 100);
-    const li = el("li", d.violation ? "violation" : "ok");
+    const li = el("li", k);
     const fill = el("i");
     const bar = el("div", "bar");
     bar.append(fill);
+        const flagText = {
+      violation: "VIOLATION",
+      uncertain: "UNCERTAIN",
+      ok: d.label.startsWith("No-") ? "NOT REQUIRED" : "OK",
+    }[k];
     li.append(el("span", "label", d.label), el("span", "conf", pct + "%"),
-              el("span", "flag", d.violation ? "VIOLATION" : "OK"), bar);
+              el("span", "flag", flagText), bar);
     ul.append(li);
     setTimeout(() => (fill.style.width = pct + "%"), 150 + i * 150);
   });
+}
+
+function summarise(t) {
+  if (t.check === "quality") {
+    const q = t.result;
+    return ["Image quality", q.acceptable
+      ? `OK (sharpness ${q.blur_score.toFixed(0)}, brightness ${q.brightness.toFixed(0)})`
+      : "Poor: blurry, too dark or too bright"];
+  }
+  if (t.check === "initial_detection") return ["Detection", `${t.result.detection_count} objects found`];
+  if (t.check === "targeted_crop_comparison") return ["Zoom re-check", `${t.result.uncertain_count} uncertain detections re-checked`];
+  if (t.check === "enhanced_full_image_comparison") {
+    if (!t.result) return ["Enhanced re-check", "skipped (nothing uncertain)"];
+    return ["Enhanced re-check", t.result.error ? "could not run" : "compared with a contrast-enhanced copy"];
+  }
+  if (t.action) return ["Decision: " + t.action, t.reason || t.status || ""];
+  return ["Step", JSON.stringify(t)];
 }
 
 function renderTrace(trace) {
   const ol = $("trace");
   ol.replaceChildren();
   trace.forEach((t, i) => {
-    const parts = Object.entries(t)
-      .filter(([k]) => k !== "step")
-      .map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : v}`);
+    const [title, detail] = summarise(t);
     const li = el("li");
-    li.append(el("span", "step-no", "STEP " + (t.step ?? i)), el("span", "", parts[0] || ""),
-              el("span", "step-detail", parts.slice(1).join("  ·  ")));
+    li.append(el("span", "step-no", "STEP " + (t.step ?? i)), el("span", "", title),
+              el("span", "step-detail", detail));
     ol.append(li);
     setTimeout(() => li.classList.add("show"), 300 + i * 350);
   });
@@ -156,11 +188,18 @@ const ACTIONS = {
   human_approval: { text: "NEEDS HUMAN REVIEW", cls: "human", color: "#ff9f1c" },
 };
 
+const STATUSES = {
+  POTENTIAL_PPE_ISSUES: { text: "POTENTIAL PPE ISSUE", cls: "alert", color: "#ff3b3b" },
+  UNCERTAIN_FINDINGS: { text: "UNCERTAIN: REVIEW", cls: "human", color: "#ff9f1c" },
+  IMAGE_QUALITY_INSUFFICIENT: { text: "IMAGE TOO POOR", cls: "human", color: "#ff9f1c" },
+  NO_HIGH_CONFIDENCE_VIOLATION_LABELS_DETECTED: { text: "NO VIOLATIONS FOUND", cls: "pass", color: "#2ecc8f" },
+};
+
 function showResult(data) {
-  const a = ACTIONS[data.action] || ACTIONS.human_approval;
+  const a = STATUSES[data.status] || ACTIONS[data.action] || ACTIONS.human_approval;
   setBadge(a.text, a.cls);
   frame.style.setProperty("--orbit-color", a.color);
-  typeLog(`decision: ${data.action}   run ${data.run_id}`);
+  typeLog(data.summary ? data.summary.message : `decision: ${data.action}`);
 
   lastDetections = data.detections;
   renderBoxes(data.detections);
@@ -168,7 +207,7 @@ function showResult(data) {
   renderTrace(data.trace);
 
   setChip("chip-s3", data.saved_to_s3 ? "Saved to S3" : "Not saved (S3 off)", data.saved_to_s3 ? "on" : "off");
-  if (data.action === "alert") {
+    if (data.status === "POTENTIAL_PPE_ISSUES") {
     setChip("chip-sns", data.alert_sent ? "Alert email sent" : "Alert not sent (SNS off)", data.alert_sent ? "on" : "off");
   } else {
     setChip("chip-sns", "No alert needed", "");

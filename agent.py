@@ -14,15 +14,7 @@ CROP_PADDING = 20
 CROP_SCALE = 2
 MATCH_IOU_THRESHOLD = 0.30
 
-VIOLATION_LABELS = {
-    "No-Helmet",
-    "No-Vest",
-    "No-Glove",
-    "No-Mask",
-    "No-Ear-Protection",
-    "No-Boots",
-    "No-Glass",
-}
+VIOLATION_LABELS = {"No-Helmet", "No-Vest"}
 
 
 def count_labels(detections):
